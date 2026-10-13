@@ -121,8 +121,8 @@ def visualize_motion_vectors(img, flow, step=16, scale=2.0, min_magnitude=1.0, c
     return result
 
 
-def process_video_with_params(video_path, output_path, params, step=16, scale=2.0):
-    """Обрабатывает видео для конкретного набора параметров и сохраняет результат."""
+def process_video_with_params(video_path, output_path, params, step=16, scale=2.0, max_frames=60):
+    """Обрабатывает заданное число кадров для конкретного набора параметров."""
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise ValueError(f"Не удалось открыть видеофайл: {video_path}")
@@ -137,7 +137,7 @@ def process_video_with_params(video_path, output_path, params, step=16, scale=2.
         fps = 30.0
 
     h, w = prev_frame.shape[:2]
-    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    fourcc = cv2.VideoWriter.fourcc(*"mp4v")
 
     output_dir = Path(output_path).parent
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -148,7 +148,11 @@ def process_video_with_params(video_path, output_path, params, step=16, scale=2.
         raise ValueError(f"Не удалось создать выходной видеофайл: {output_path}")
 
     print(f"Обработка параметров {params['name']}: {params}")
+    processed_frames = 0
     while cap.isOpened():
+        if max_frames is not None and processed_frames >= max_frames:
+            break
+
         ret, curr_frame = cap.read()
         if not ret:
             break
@@ -169,13 +173,14 @@ def process_video_with_params(video_path, output_path, params, step=16, scale=2.
         visualized_frame = visualize_motion_vectors(curr_frame, flow, step=step, scale=scale)
         out.write(visualized_frame)
         prev_gray = curr_gray
+        processed_frames += 1
 
     cap.release()
     out.release()
     print(f"Готово: {output_path}")
 
 
-def analyze_motion_optical_flow(video_path, output_dir="results", parameter_sets=None):
+def analyze_motion_optical_flow(video_path, output_dir="results", parameter_sets=None, max_frames=60):
     """Запускает сравнение оптического потока для нескольких наборов параметров."""
     path = Path(video_path)
     if not path.exists():
@@ -190,7 +195,7 @@ def analyze_motion_optical_flow(video_path, output_dir="results", parameter_sets
     output_files = []
     for params in parameter_sets:
         output_file = out_dir / f"optical_flow_{params['name']}.mp4"
-        process_video_with_params(str(path), str(output_file), params)
+        process_video_with_params(str(path), str(output_file), params, max_frames=max_frames)
         output_files.append(output_file)
 
     return output_files
