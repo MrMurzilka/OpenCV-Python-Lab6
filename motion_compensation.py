@@ -121,8 +121,8 @@ def visualize_motion_vectors(img, flow, step=16, scale=2.0, min_magnitude=1.0, c
     return result
 
 
-def process_video_with_params(video_path, output_path, params, step=16, scale=2.0, max_frames=60):
-    """Обрабатывает заданное число кадров для конкретного набора параметров."""
+def process_video_with_params(video_path, output_path, params, step=16, scale=2.0, max_frames=None):
+    """Обрабатывает всё видео для конкретного набора параметров."""
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise ValueError(f"Не удалось открыть видеофайл: {video_path}")
@@ -180,7 +180,7 @@ def process_video_with_params(video_path, output_path, params, step=16, scale=2.
     print(f"Готово: {output_path}")
 
 
-def analyze_motion_optical_flow(video_path, output_dir="results", parameter_sets=None, max_frames=60):
+def analyze_motion_optical_flow(video_path, output_dir="results", parameter_sets=None, max_frames=None):
     """Запускает сравнение оптического потока для нескольких наборов параметров."""
     path = Path(video_path)
     if not path.exists():
